@@ -1,29 +1,88 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
+<script>
+  import ProjectCard from './components/ProjectCard.vue';
+
+  import axios from 'axios';
+
+  export default {
+    name: 'App',
+    components:{
+      ProjectCard
+    },
+    data(){
+        return {
+            baseUrl: 'http://127.0.0.1:8000/api/',
+            projects : [],
+            pagination:{
+                current: 1,
+                last:null
+            }
+        }
+      },
+      methods:{
+        getApi(page){
+          this.pagination.current = page;
+            axios.get(this.baseUrl + 'projects', {
+              params:{
+                    page: this.pagination.current
+                }
+            })
+                .then(result => {
+                    this.projects = result.data.projects.data;
+                    this.pagination.current = result.data.projects.current_page
+                    this.pagination.last = result.data.projects.last_page
+                })
+        }
+    },
+    mounted(){
+        this.getApi(1);
+    }
+  }
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div class="container py-5">
+    <div class="row">
+      <h1 class="text-white">Progetti</h1>
+    </div>
+
+    <div class="row d-flex flex-wrap ">  
+      <ProjectCard
+      v-for="project in projects"
+      :key="project.id"
+      :project="project"/>
+    </div>
+
+    <div class="paginator">
+        <button
+            :disabled="pagination.current === 1"
+            @click="getApi(1)"
+            > |	&lt; </button>
+
+        <button
+            :disabled="pagination.current === 1"
+            @click="getApi(pagination.current - 1)"
+            > &larr; </button>
+
+        <button
+            v-for="i in pagination.last" :key="i"
+            :disabled="pagination.current === i"
+            @click="getApi(i)"
+            > {{i}} </button>
+
+        <button
+            :disabled="pagination.current === pagination.last"
+            @click="getApi(pagination.current + 1)"
+            > &rarr; </button>
+
+        <button
+            :disabled="pagination.current === pagination.last"
+            @click="getApi(pagination.last)"
+            > >| </button>
+    </div>
+
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
+<style lang="scss">
+  @use './styles/general';
 </style>
